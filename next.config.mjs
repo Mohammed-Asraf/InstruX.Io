@@ -5,12 +5,14 @@ const nextConfig = {
     serverActions: { bodySizeLimit: '200mb' },
   },
   async rewrites() {
-    return [
-      {
-        source: '/',
-        destination: '/index.html',
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: '/',
+          destination: '/index.html',
+        },
+      ],
+    };
   },
   async headers() {
     return [
