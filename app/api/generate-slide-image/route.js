@@ -30,6 +30,7 @@ export async function POST(request) {
         .from('course-images')
         .upload(path, buffer, { contentType: 'image/png', upsert: false });
 
+      if (error) console.warn('Storage upload error:', JSON.stringify(error));
       if (!error) {
         const { data: { publicUrl } } = supabase.storage
           .from('course-images')
