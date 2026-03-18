@@ -189,33 +189,12 @@ async function extractPptxImages(buffer) {
   return images;
 }
 
-// Run Tesseract OCR on an array of {base64, mimeType} images.
-// Returns the same array with an added `ocrText` field on each item.
-// Images where OCR yields ≥ 30 chars of text won't need Vision API later.
+// OCR is skipped on serverless (Tesseract requires native binaries + large files)
 async function ocrImages(images) {
-  if (!images.length) return images;
-  try {
-    const { createWorker } = await import('tesseract.js');
-    const worker = await createWorker('eng', 1, { logger: () => {} });
-    const result = [];
-    for (const img of images) {
-      try {
-        const buf = Buffer.from(img.base64, 'base64');
-        const { data: { text } } = await worker.recognize(buf);
-        result.push({ ...img, ocrText: text.trim() });
-      } catch (_) {
-        result.push({ ...img, ocrText: '' });
-      }
-    }
-    await worker.terminate();
-    return result;
-  } catch (_) {
-    // tesseract unavailable — return images unchanged
-    return images.map(img => ({ ...img, ocrText: '' }));
-  }
+  return images.map(img => ({ ...img, ocrText: '' }));
 }
 
-export const maxDuration = 60;
+export const maxDuration = 10;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

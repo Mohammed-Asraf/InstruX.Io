@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['tesseract.js'],
+  serverExternalPackages: [],
   experimental: {
     serverActions: { bodySizeLimit: '200mb' },
   },
