@@ -253,6 +253,8 @@ function render() {
     if (slide.imageUrl) {
       const imgEl = inner.querySelector('[data-ml-img]');
       if (imgEl) imgEl.src = slide.imageUrl;
+      const coverBg = inner.querySelector('[data-cover-img]');
+      if (coverBg) coverBg.style.backgroundImage = 'url(' + JSON.stringify(slide.imageUrl) + ')';
     }
     inner.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
     inner.style.transform = 'translateX(0)';
