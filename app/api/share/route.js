@@ -23,8 +23,14 @@ export async function POST(request) {
     const id = randomUUID();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    // imageUrls are stripped on the frontend before sending (Vercel 4.5MB limit)
-    const slidesClean = slides;
+    // Strip any residual base64 imageUrls (public URLs pass through fine)
+    const slidesClean = slides.map(s => {
+      if (s.imageUrl && s.imageUrl.startsWith('data:')) {
+        const { imageUrl, ...rest } = s;
+        return rest;
+      }
+      return s;
+    });
 
     const { error } = await getSupabase()
       .from('shared_courses')

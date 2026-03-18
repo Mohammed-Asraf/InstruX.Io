@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getOpenAI } from '../../../lib/ai';
+import { getOpenAI, getSupabase } from '../../../lib/ai';
+import { randomUUID } from 'crypto';
 
 export async function POST(request) {
   try {
@@ -19,6 +20,27 @@ export async function POST(request) {
     });
 
     const base64 = imgRes.data[0].b64_json;
+    const buffer = Buffer.from(base64, 'base64');
+
+    // Upload to Supabase Storage so share links can use the public URL
+    try {
+      const path = `slides/${randomUUID()}.png`;
+      const supabase = getSupabase();
+      const { error } = await supabase.storage
+        .from('course-images')
+        .upload(path, buffer, { contentType: 'image/png', upsert: false });
+
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('course-images')
+          .getPublicUrl(path);
+        return NextResponse.json({ imageUrl: publicUrl });
+      }
+    } catch (uploadErr) {
+      console.warn('Storage upload failed, falling back to base64:', uploadErr.message);
+    }
+
+    // Fallback: return base64 if storage upload fails
     return NextResponse.json({ imageUrl: `data:image/png;base64,${base64}` });
 
   } catch (err) {

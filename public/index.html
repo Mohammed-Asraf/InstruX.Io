@@ -4162,7 +4162,7 @@ Return ONLY valid JSON. No markdown, no backticks, no commentary. Use this exact
                 const res = await fetch(`${BACKEND_URL}/api/share`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, slides: mlSlides.map(s => { const { imageUrl, ...rest } = s; return rest; }), learner, strategy, bloomLevel })
+                    body: JSON.stringify({ title, slides: mlSlides, learner, strategy, bloomLevel })
                 });
                 const data = await res.json();
 
