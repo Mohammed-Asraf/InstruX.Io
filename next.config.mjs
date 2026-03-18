@@ -4,12 +4,11 @@ const nextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: '200mb' },
   },
-  async redirects() {
+  async rewrites() {
     return [
       {
         source: '/',
         destination: '/index.html',
-        permanent: false,
       },
     ];
   },
