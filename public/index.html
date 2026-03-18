@@ -4175,7 +4175,7 @@ Return ONLY valid JSON. No markdown, no backticks, no commentary. Use this exact
                 document.getElementById('share-embed').textContent = embed;
             } catch (err) {
                 console.error('Share error:', err);
-                document.getElementById('share-url').textContent = 'Error generating link — try again';
+                document.getElementById('share-url').textContent = 'Error: ' + err.message;
             }
         }
 
