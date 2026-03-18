@@ -23,12 +23,20 @@ export async function POST(request) {
     const id = randomUUID();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
+    // Strip base64 imageUrls — they can be 2-5MB each and exceed Supabase limits.
+    // The share viewer uses css-pattern backgrounds as fallback.
+    const slidesClean = slides.map(s => {
+      if (!s.imageUrl) return s;
+      const { imageUrl, ...rest } = s;
+      return rest;
+    });
+
     const { error } = await getSupabase()
       .from('shared_courses')
       .insert({
         id,
         title: title || 'Untitled Course',
-        slides,
+        slides: slidesClean,
         learner: learner || null,
         strategy: strategy || null,
         bloom_level: bloomLevel || null,
