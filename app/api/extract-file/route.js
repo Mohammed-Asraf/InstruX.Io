@@ -251,10 +251,28 @@ export async function POST(request) {
     let images = [];
 
     if (ext === 'pdf') {
-      const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
-      const result = await pdfParse(buffer);
-      text = result.text;
-      numpages = result.numpages;
+      // Use pdfjs-dist directly — handles custom/subset fonts (Genially, InDesign, etc.)
+      // that pdf-parse fails to decode due to ToUnicode/CMap mapping gaps.
+      try {
+        const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true });
+        const pdfDoc = await loadingTask.promise;
+        numpages = pdfDoc.numPages;
+        const pageTexts = [];
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i);
+          const content = await page.getTextContent();
+          const pageStr = content.items.map(item => ('str' in item ? item.str : '')).join(' ');
+          if (pageStr.trim()) pageTexts.push(pageStr);
+        }
+        text = pageTexts.join('\n\n');
+      } catch (pdfErr) {
+        console.warn('pdfjs-dist failed, falling back to pdf-parse:', pdfErr.message);
+        const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
+        const result = await pdfParse(buffer);
+        text = result.text;
+        numpages = result.numpages;
+      }
       // Extract all embedded images from the PDF binary (JPEG + PNG)
       images = extractPdfImages(buffer);
     } else if (ext === 'docx') {
