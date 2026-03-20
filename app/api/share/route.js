@@ -23,14 +23,33 @@ export async function POST(request) {
     const id = randomUUID();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    // Strip any residual base64 imageUrls (public URLs pass through fine)
-    const slidesClean = slides.map(s => {
+    // For base64 images: upload to Supabase Storage so share links have permanent URLs
+    const supabase = getSupabase();
+    const slidesClean = await Promise.all(slides.map(async s => {
       if (s.imageUrl && s.imageUrl.startsWith('data:')) {
+        try {
+          const base64 = s.imageUrl.replace(/^data:image\/\w+;base64,/, '');
+          const buffer = Buffer.from(base64, 'base64');
+          const path = `slides/${randomUUID()}.png`;
+          const { error: uploadError } = await supabase.storage
+            .from('Course_Images')
+            .upload(path, buffer, { contentType: 'image/png', upsert: false });
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('Course_Images')
+              .getPublicUrl(path);
+            return { ...s, imageUrl: publicUrl };
+          }
+          console.warn('Share image upload error:', JSON.stringify(uploadError));
+        } catch (e) {
+          console.warn('Share image upload failed:', e.message);
+        }
+        // If storage upload fails, strip base64 (too large for DB row)
         const { imageUrl, ...rest } = s;
         return rest;
       }
       return s;
-    });
+    }));
 
     const { error } = await getSupabase()
       .from('shared_courses')

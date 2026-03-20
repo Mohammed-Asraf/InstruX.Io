@@ -189,9 +189,36 @@ async function extractPptxImages(buffer) {
   return images;
 }
 
-// OCR is skipped on serverless (Tesseract requires native binaries + large files)
+// Vision-based OCR using GPT-4o — no native binaries needed
 async function ocrImages(images) {
-  return images.map(img => ({ ...img, ocrText: '' }));
+  const openai = getOpenAI();
+  const results = [];
+  for (const img of images.slice(0, 10)) { // cap at 10 images to control cost
+    try {
+      const res = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Extract ALL text content visible in this image exactly as it appears. Preserve headings, bullets, numbers, and paragraph structure. Return only the extracted text — no commentary, no markdown code blocks.'
+            },
+            {
+              type: 'image_url',
+              image_url: { url: `data:${img.mimeType};base64,${img.base64}`, detail: 'high' }
+            }
+          ]
+        }]
+      });
+      results.push({ ...img, ocrText: res.choices[0].message.content.trim() });
+    } catch (e) {
+      console.warn('Vision OCR failed for image:', e.message);
+      results.push({ ...img, ocrText: '' });
+    }
+  }
+  return results;
 }
 
 export const maxDuration = 10;
@@ -259,18 +286,27 @@ export async function POST(request) {
       text = buffer.toString('utf-8');
     }
 
-    // Run OCR on extracted images (zero AI tokens — pure Tesseract)
-    if (images.length) images = await ocrImages(images);
+    // Determine if text extraction is sparse (complex designed PDF / scanned pages)
+    const rawWordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const wordsPerPage = numpages > 0 ? rawWordCount / numpages : rawWordCount;
+    const isSparse = wordsPerPage < 50; // < 50 words/page = likely designed/image-heavy PDF
 
-    // For image-only files: stitch OCR text if XML/text parsing got nothing
-    if (!text.trim() && images.length) {
+    // Run GPT-4o Vision OCR on extracted images when: text is absent OR sparse
+    if (images.length && (!text.trim() || isSparse)) {
+      images = await ocrImages(images);
+    }
+
+    // Use vision text if it's richer than what pdf-parse got
+    if (images.length) {
       const ocrBody = images.map(img => img.ocrText || '').filter(Boolean).join('\n\n');
-      if (ocrBody.trim()) {
+      if (ocrBody.trim() && ocrBody.length > text.length) {
         text = ocrBody;
-      } else if (ext === 'pptx' || ext === 'ppt') {
-        throw new Error('No text found in presentation. The file may be image-only or password-protected.');
-      } else if (ext === 'pdf') {
-        throw new Error('No text found in PDF. The file may be a scanned image — OCR could not recover text.');
+      } else if (!text.trim()) {
+        if (ext === 'pptx' || ext === 'ppt') {
+          throw new Error('No text found in presentation. The file may be image-only or password-protected.');
+        } else if (ext === 'pdf') {
+          throw new Error('No text found in PDF. The file may be a scanned image — OCR could not recover text.');
+        }
       }
     }
 

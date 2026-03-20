@@ -31,6 +31,15 @@ IMAGE DECISION RULES (set 'imageDecision' on every content and quote card):
 
 Examples: "Fire evacuation procedure" → canva-ai | "Importance of communication" → css-pattern | "How to reset a device" → canva-ai | "Bloom's levels" → css-pattern
 
+VISUAL STYLE RULES (set 'visualStyle' on every canva-ai card — pick the one that best fits the content):
+- "cinematic"   → People, leadership, workplace scenarios, emotions, storytelling, culture — dramatic film-quality photography
+- "illustrated" → Concepts, frameworks, data, abstract ideas that need visual metaphor — premium editorial digital illustration
+- "comic"       → Safety, compliance, gamified or fun content, dos-and-don'ts — bold comic book art style
+- "3d-render"   → Technology, software, products, systems, architecture — clean photorealistic 3D CGI
+- "realistic"   → Physical procedures, equipment, medical, scientific, step-by-step — high-res professional photography
+
+Examples: "Sales conversation skills" → cinematic | "Cloud architecture diagram" → 3d-render | "Fire safety evacuation" → comic | "Quarterly revenue growth" → illustrated | "Lab sample handling" → realistic
+
 ANTI-HALLUCINATION RULES (enforced when structured knowledge is provided):
 - Every fact, number, name, threshold, or procedure in a slide MUST come from the verified knowledge below.
 - DO NOT use general knowledge about this topic. If the knowledge doesn't cover it, don't include it.
@@ -69,8 +78,9 @@ content:
 {
   "type": "content",
   "designHint": "image-top" | "text-focus" | "split-view",
-  "visualPrompt": "REQUIRED. Vivid vertical (9:16) photo description related to the topic — be specific (e.g. 'A confident professional presenting data on a large screen in a modern boardroom, warm lighting')",
+  "visualPrompt": "REQUIRED. Vivid vertical (9:16) scene description — be hyper-specific (e.g. 'A confident Black female executive presenting quarterly growth data on a glass wall display in a sleek open-plan office, golden hour lighting, shallow depth of field')",
   "imageDecision": "canva-ai" | "css-pattern" | "none",
+  "visualStyle": "cinematic" | "illustrated" | "comic" | "3d-render" | "realistic",
   "heading": "string",
   "subtitle": "string or null",
   "body": "STRICTLY MAX 150 CHARS. Practical explanation.",
@@ -89,8 +99,9 @@ quote:
 {
   "type": "quote",
   "designHint": "simple" | "image-bg",
-  "visualPrompt": "Subtle background image/pattern description",
+  "visualPrompt": "Vivid vertical background scene description",
   "imageDecision": "canva-ai" | "css-pattern",
+  "visualStyle": "cinematic" | "illustrated" | "comic" | "3d-render" | "realistic",
   "text": "High-impact short statement",
   "attribution": "Expert"
 }
@@ -174,6 +185,7 @@ Return ONLY the JSON array.`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               visualPrompt: slide.visualPrompt,
+              visualStyle: slide.visualStyle || 'cinematic',
               slideTitle: slide.heading || '',
               brandKitId: brandKitId || undefined
             })

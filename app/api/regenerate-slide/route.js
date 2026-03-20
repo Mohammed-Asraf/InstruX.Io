@@ -28,8 +28,9 @@ STRICT OUTPUT RULES:
 
 CARD SCHEMAS:
 
-content: { "type": "content", "designHint": "image-top"|"text-focus"|"split-view", "visualPrompt": "REQUIRED vivid vertical 9:16 photo description", "imageDecision": "canva-ai"|"css-pattern"|"none", "heading": "string", "subtitle": "string or null", "body": "MAX 150 CHARS", "proTip": "MAX 100 CHARS or null" }
+content: { "type": "content", "designHint": "image-top"|"text-focus"|"split-view", "visualPrompt": "REQUIRED vivid vertical 9:16 scene description — hyper-specific", "imageDecision": "canva-ai"|"css-pattern"|"none", "visualStyle": "cinematic"|"illustrated"|"comic"|"3d-render"|"realistic", "heading": "string", "subtitle": "string or null", "body": "MAX 150 CHARS", "proTip": "MAX 100 CHARS or null" }
 IMAGE DECISION RULES: "canva-ai" for physical/visual concepts (process, object, place, person, tool); "css-pattern" for abstract concepts (frameworks, principles, attitudes); "none" for quiz/checklist/flipcards.
+VISUAL STYLE RULES: cinematic=people/scenarios/leadership, illustrated=concepts/frameworks/data, comic=safety/compliance/fun, 3d-render=tech/software/systems, realistic=procedures/equipment/science.
 
 quote: { "type": "quote", "designHint": "simple"|"image-bg", "visualPrompt": "subtle background description", "text": "High-impact statement", "attribution": "Expert name" }
 
@@ -88,6 +89,7 @@ Return ONLY the improved JSON object for this single slide.`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             visualPrompt: newSlide.visualPrompt,
+            visualStyle: newSlide.visualStyle || 'cinematic',
             slideTitle: newSlide.heading || '',
             brandKitId: brandKitId || undefined
           })

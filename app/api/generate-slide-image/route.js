@@ -4,11 +4,20 @@ import { randomUUID } from 'crypto';
 
 export async function POST(request) {
   try {
-    const { visualPrompt, slideTitle, brandKitId } = await request.json();
+    const { visualPrompt, visualStyle, slideTitle, brandKitId } = await request.json();
 
     if (!visualPrompt) return NextResponse.json({ imageUrl: null });
 
-    const enhancedPrompt = `${visualPrompt}. Professional microlearning slide visual, vertical portrait format, photorealistic, clean and modern.`;
+    // Style-specific prompt suffixes for DALL-E 3
+    const styleGuide = {
+      cinematic:   'Cinematic film still, dramatic moody lighting, shallow depth of field, anamorphic lens flare, rich colour grading, movie-quality composition, 8K resolution, vertical 9:16 portrait frame',
+      illustrated: 'Premium editorial digital illustration, clean vector-like art with subtle texture, vibrant professional colour palette, Headspace/Duolingo aesthetic, flat depth with detail accents, vertical 9:16 portrait',
+      comic:       'Bold comic book illustration, thick ink outlines, halftone dot shading, saturated vivid colours, dynamic action composition, Marvel/DC graphic novel style, vertical 9:16 portrait frame',
+      '3d-render': 'High-quality 3D CGI render, Octane/Blender quality, soft studio lighting, photorealistic materials and reflections, clean minimal background, vertical 9:16 portrait format',
+      realistic:   'Professional photography, natural soft lighting, Sony A7 85mm f/1.8, ultra-sharp focus, high resolution detail, documentary-style composition, vertical 9:16 portrait frame',
+    };
+    const styleSuffix = styleGuide[visualStyle] || styleGuide.cinematic;
+    const enhancedPrompt = `${visualPrompt}. ${styleSuffix}. No text, no logos, no watermarks.`;
 
     const imgRes = await getOpenAI().images.generate({
       model: 'dall-e-3',
