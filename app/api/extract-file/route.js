@@ -221,7 +221,7 @@ async function ocrImages(images) {
   return results;
 }
 
-export const maxDuration = 10;
+export const maxDuration = 60;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
