@@ -255,7 +255,9 @@ export async function POST(request) {
       // that pdf-parse fails to decode due to ToUnicode/CMap mapping gaps.
       try {
         const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
-        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true });
+        // Disable worker — required in Node.js / serverless environments
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true, disableWorker: true });
         const pdfDoc = await loadingTask.promise;
         numpages = pdfDoc.numPages;
         const pageTexts = [];
