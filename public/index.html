@@ -308,8 +308,8 @@
                     </section>
 
                     <!-- ID STUDIO: Screen 1 — Source Material -->
-                    <section id="id-screen-1" class="step-content">
-                        <div class="flex" style="height:calc(100vh - 5rem);">
+                    <section id="id-screen-1" class="step-content" style="height:calc(100vh - 5rem); overflow:hidden;">
+                        <div class="flex" style="height:100%;">
 
                             <!-- LEFT PANEL — navy -->
                             <div class="flex flex-col justify-between p-10" style="background:#1e3a8a; width:38%; flex-shrink:0;">
@@ -432,7 +432,7 @@
                             </div>
 
                             <!-- RIGHT PANEL — yellow -->
-                            <div class="flex flex-col justify-center px-10 py-6 overflow-y-auto" style="background:#FFCC31; flex:1;">
+                            <div class="flex flex-col justify-start px-10 py-6 overflow-y-auto" style="background:#FFCC31; flex:1; min-height:0;">
                                 <div class="space-y-3">
 
                                     <!-- ① Source Material -->
@@ -1798,7 +1798,9 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'https://instru-x-io.vercel.app';
+        const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:3000'
+          : 'https://instru-x-io.vercel.app';
         let currentStep = 1;
         let isFullscreen = false;
         let isLogicEnabled = false;
@@ -4162,7 +4164,7 @@ Return ONLY valid JSON. No markdown, no backticks, no commentary. Use this exact
                 const res = await fetch(`${BACKEND_URL}/api/share`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, slides: mlSlides.map(s => s.imageUrl && s.imageUrl.startsWith('data:') ? (({ imageUrl, ...rest }) => rest)(s) : s), learner, strategy, bloomLevel })
+                    body: JSON.stringify({ title, slides: mlSlides, learner, strategy, bloomLevel })
                 });
                 const data = await res.json();
 
